@@ -1,0 +1,7 @@
+class AppRoutes {
+  static const HOME = '/';
+  static const AUTH = '/auth';
+  static const HOMEUSER = '/homeUser';
+  static const FORGOT_PASSWORD = '/forgotPassword';
+  static const SETTINGS = '/settings';
+}
