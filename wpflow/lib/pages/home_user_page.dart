@@ -53,17 +53,30 @@ class _HomeUserPageState extends State<HomeUserPage> {
                         children: [
                           const Header(titulo: 'Seja bem-vindo!'),
                           const SizedBox(height: 20),
-                          SessionCard(
-                            title: 'WhatsApp 1',
-                            sessionName: 'session1',
-                            controller: _phoneController1,
+                          SizedBox(
+                            height:
+                                deviceSize.height *
+                                0.6, // define uma altura para o conteúdo centralizado
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  SessionCard(
+                                    title: 'WhatsApp 1',
+                                    sessionName: 'session1',
+                                    controller: _phoneController1,
+                                  ),
+                                  SessionCard(
+                                    title: 'WhatsApp 2',
+                                    sessionName: 'session2',
+                                    controller: _phoneController2,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 20),
-                          SessionCard(
-                            title: 'WhatsApp 2',
-                            sessionName: 'session2',
-                            controller: _phoneController2,
-                          ),
                         ],
                       ),
                     ),
