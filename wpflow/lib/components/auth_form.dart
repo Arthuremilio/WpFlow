@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../exceptions/auth_exception.dart';
 import '../models/auth.dart';
-import '../models/home_user.dart';
+import '../models/user.dart';
 import '../utils/app-routes.dart';
 import 'package:provider/provider.dart';
 
@@ -59,20 +59,20 @@ class _AuthFormState extends State<AuthForm> {
 
     _formKey.currentState?.save();
     Auth auth = Provider.of(context, listen: false);
-    HomeProvider homeProvider = Provider.of<HomeProvider>(
+    UserProvider userProvider = Provider.of<UserProvider>(
       context,
       listen: false,
     );
     try {
       if (_isLogin()) {
         await auth.login(_authData['email']!, _authData['password']!, (userId) {
-          homeProvider.setUserId(userId);
+          userProvider.setUserId(userId);
         });
       } else {
         await auth.signup(_authData['email']!, _authData['password']!, (
           userId,
         ) {
-          homeProvider.setUserId(userId);
+          userProvider.setUserId(userId);
         });
       }
 

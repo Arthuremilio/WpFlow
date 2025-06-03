@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/home_user.dart';
+import '../models/send_message.dart';
 
 class SessionCard extends StatefulWidget {
   final String title;
@@ -31,7 +32,10 @@ class _SessionCardState extends State<SessionCard> {
 
   Future<void> _initialize() async {
     try {
-      await context.read<HomeProvider>().generateToken(widget.sessionName);
+      await context.read<HomeProvider>().generateToken(
+        context,
+        widget.sessionName,
+      );
       await _checkStatus();
     } catch (e) {
       _showError('Erro ao iniciar sessão: $e');
@@ -40,9 +44,34 @@ class _SessionCardState extends State<SessionCard> {
 
   Future<void> _connect() async {
     try {
-      final qrCodeBase64 = await context.read<HomeProvider>().startSession(
+      final homeProvider = context.read<HomeProvider>();
+      final sendProvider = context.read<SendMessageProvider>();
+
+      homeProvider.setSessionLabel(
+        context,
+        widget.sessionName,
+        widget.controller.text,
+      );
+      final sessionId = HomeProvider.buildSessionId(
+        context,
         widget.sessionName,
       );
+
+      final token = homeProvider.getToken(context, widget.sessionName);
+
+      if (token == null) {
+        _showError('Token não encontrado para a sessão.');
+        return;
+      }
+
+      sendProvider.setToken(sessionId, token);
+      sendProvider.setSessionLabel(sessionId, widget.controller.text);
+
+      final qrCodeBase64 = await homeProvider.startSession(
+        context,
+        widget.sessionName,
+      );
+
       if (qrCodeBase64 != null) {
         _showQrCodeDialog(qrCodeBase64);
       }
@@ -53,7 +82,7 @@ class _SessionCardState extends State<SessionCard> {
 
   Future<void> _disconnect() async {
     try {
-      await context.read<HomeProvider>().logout(widget.sessionName);
+      await context.read<HomeProvider>().logout(context, widget.sessionName);
       setState(() => status = "DESCONECTADO");
     } catch (e) {
       _showError('Erro ao desconectar: $e');
@@ -63,6 +92,7 @@ class _SessionCardState extends State<SessionCard> {
   Future<void> _checkStatus() async {
     try {
       final result = await context.read<HomeProvider>().getStatus(
+        context,
         widget.sessionName,
       );
       setState(() {
@@ -90,6 +120,7 @@ class _SessionCardState extends State<SessionCard> {
           timer,
         ) async {
           final result = await context.read<HomeProvider>().getStatus(
+            context,
             widget.sessionName,
           );
           if (result == "CONNECTED" && mounted) {

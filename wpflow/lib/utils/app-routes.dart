@@ -4,4 +4,5 @@ class AppRoutes {
   static const HOMEUSER = '/homeUser';
   static const FORGOT_PASSWORD = '/forgotPassword';
   static const SETTINGS = '/settings';
+  static const SIMPLE_MESSAGE = '/simpleMessage';
 }

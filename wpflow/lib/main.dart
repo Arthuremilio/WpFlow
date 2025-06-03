@@ -1,5 +1,6 @@
 import 'package:wpflow/models/home_user.dart';
 import 'package:flutter/material.dart';
+import 'package:wpflow/models/send_message.dart';
 import 'models/auth.dart';
 import 'pages/home_principal.dart';
 import 'pages/auth_page.dart';
@@ -8,6 +9,8 @@ import 'utils/app-routes.dart';
 import 'package:provider/provider.dart';
 import 'pages/settings_page.dart';
 import 'pages/forgot_password_page.dart';
+import 'pages/simple_message.dart';
+import 'models/user.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +24,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => Auth()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => SendMessageProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -46,6 +51,7 @@ class MyApp extends StatelessWidget {
           AppRoutes.HOMEUSER: (ctx) => const HomeUserPage(),
           AppRoutes.FORGOT_PASSWORD: (ctx) => ForgotPasswordPage(),
           AppRoutes.SETTINGS: (ctx) => const SettingsPage(),
+          AppRoutes.SIMPLE_MESSAGE: (ctx) => const SimpleMessagePage(),
         },
       ),
     );

@@ -1,23 +1,36 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../models/user.dart';
 
 class HomeProvider with ChangeNotifier {
   final Map<String, String> _sessionTokens = {};
-  String? _userId;
+  final Map<String, String> _sessionLabels = {};
 
-  void setUserId(String id) {
-    _userId = id;
+  void setSessionLabel(BuildContext context, String session, String label) {
+    final userId = Provider.of<UserProvider>(context, listen: false).userId;
+    if (userId == null) throw Exception('Usuário não identificado');
+    final sessionId = '$userId$session';
+    _sessionLabels[sessionId] = label;
     notifyListeners();
   }
 
-  String _buildSessionId(String session) {
-    if (_userId == null) throw Exception('userId não definido');
-    return '$_userId$session';
+  List<String> get availableSessions {
+    return _sessionLabels.entries
+        .where((e) => _sessionTokens.containsKey(e.key))
+        .map((e) => e.value)
+        .toList();
   }
 
-  Future<void> generateToken(String session) async {
-    final sessionId = _buildSessionId(session);
+  static String buildSessionId(BuildContext context, String session) {
+    final userId = Provider.of<UserProvider>(context, listen: false).userId;
+    if (userId == null) throw Exception('userId não definido');
+    return '$userId$session';
+  }
+
+  Future<void> generateToken(BuildContext context, String session) async {
+    final sessionId = buildSessionId(context, session);
     final url = Uri.parse(
       'http://localhost:21465/api/$sessionId/THISISMYSECURETOKEN/generate-token',
     );
@@ -31,13 +44,13 @@ class HomeProvider with ChangeNotifier {
     }
   }
 
-  String? getToken(String session) {
-    final sessionId = _buildSessionId(session);
+  String? getToken(BuildContext context, String session) {
+    final sessionId = buildSessionId(context, session);
     return _sessionTokens[sessionId];
   }
 
-  Future<String?> startSession(String session) async {
-    final sessionId = _buildSessionId(session);
+  Future<String?> startSession(BuildContext context, String session) async {
+    final sessionId = buildSessionId(context, session);
     final url = Uri.parse(
       'http://localhost:21465/api/$sessionId/start-session',
     );
@@ -45,7 +58,7 @@ class HomeProvider with ChangeNotifier {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${getToken(session)}',
+        'Authorization': 'Bearer ${getToken(context, session)}',
       },
       body: jsonEncode({'webhook': null, 'waitQrCode': false}),
     );
@@ -57,14 +70,14 @@ class HomeProvider with ChangeNotifier {
     }
   }
 
-  Future<String> getStatus(String session) async {
-    final sessionId = _buildSessionId(session);
+  Future<String> getStatus(BuildContext context, String session) async {
+    final sessionId = buildSessionId(context, session);
     final url = Uri.parse(
       'http://localhost:21465/api/$sessionId/status-session',
     );
     final response = await http.get(
       url,
-      headers: {'Authorization': 'Bearer ${getToken(session)}'},
+      headers: {'Authorization': 'Bearer ${getToken(context, session)}'},
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -74,14 +87,14 @@ class HomeProvider with ChangeNotifier {
     }
   }
 
-  Future<void> logout(String session) async {
-    final sessionId = _buildSessionId(session);
+  Future<void> logout(BuildContext context, String session) async {
+    final sessionId = buildSessionId(context, session);
     final url = Uri.parse(
       'http://localhost:21465/api/$sessionId/logout-session',
     );
     final response = await http.post(
       url,
-      headers: {'Authorization': 'Bearer ${getToken(session)}'},
+      headers: {'Authorization': 'Bearer ${getToken(context, session)}'},
     );
     if (response.statusCode != 200) {
       throw Exception('Erro ao desconectar sessão: ${response.body}');

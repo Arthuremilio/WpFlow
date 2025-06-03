@@ -54,9 +54,7 @@ class _HomeUserPageState extends State<HomeUserPage> {
                           const Header(titulo: 'Seja bem-vindo!'),
                           const SizedBox(height: 20),
                           SizedBox(
-                            height:
-                                deviceSize.height *
-                                0.6, // define uma altura para o conteúdo centralizado
+                            height: deviceSize.height * 0.6,
                             child: Center(
                               child: Row(
                                 mainAxisAlignment:

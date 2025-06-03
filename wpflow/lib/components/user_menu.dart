@@ -23,6 +23,14 @@ class UserMenu extends StatelessWidget {
             ),
           ),
           IconButton(
+            icon: Icon(Icons.message, color: Colors.white),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushReplacementNamed(AppRoutes.SIMPLE_MESSAGE);
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               Navigator.of(context).pushReplacementNamed(AppRoutes.SETTINGS);
