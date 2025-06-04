@@ -6,7 +6,6 @@ import '../components/user_menu.dart';
 import '../components/header.dart';
 import '../models/send_message.dart';
 import '../components/dropdown_session.dart';
-import 'dart:convert';
 import '../components/simple_message_tab.dart';
 import '../components/simple_send_button.dart';
 
