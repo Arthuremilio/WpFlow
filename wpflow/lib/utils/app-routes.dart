@@ -5,4 +5,5 @@ class AppRoutes {
   static const FORGOT_PASSWORD = '/forgotPassword';
   static const SETTINGS = '/settings';
   static const SIMPLE_MESSAGE = '/simpleMessage';
+  static const BUCK_MESSAGE_EXCEL = '/buckMessage';
 }

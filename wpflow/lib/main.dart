@@ -1,6 +1,7 @@
 import 'package:wpflow/models/home_user.dart';
 import 'package:flutter/material.dart';
 import 'package:wpflow/models/send_message.dart';
+import 'package:wpflow/pages/buck_message_excel.dart';
 import 'models/auth.dart';
 import 'pages/home_principal.dart';
 import 'pages/auth_page.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
           AppRoutes.FORGOT_PASSWORD: (ctx) => ForgotPasswordPage(),
           AppRoutes.SETTINGS: (ctx) => const SettingsPage(),
           AppRoutes.SIMPLE_MESSAGE: (ctx) => const SimpleMessagePage(),
+          AppRoutes.BUCK_MESSAGE_EXCEL: (ctx) => const BuckMessageExcel(),
         },
       ),
     );

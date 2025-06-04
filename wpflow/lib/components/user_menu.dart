@@ -31,6 +31,14 @@ class UserMenu extends StatelessWidget {
             },
           ),
           IconButton(
+            icon: Icon(Icons.table_rows, color: Colors.white),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushReplacementNamed(AppRoutes.BUCK_MESSAGE_EXCEL);
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.settings, color: Colors.white),
             onPressed: () {
               Navigator.of(context).pushReplacementNamed(AppRoutes.SETTINGS);
