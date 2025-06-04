@@ -27,7 +27,22 @@ class _SessionCardState extends State<SessionCard> {
   @override
   void initState() {
     super.initState();
-    _initialize();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sendProvider = context.read<SendMessageProvider>();
+      final sessionId = HomeProvider.buildSessionId(
+        context,
+        widget.sessionName,
+      );
+      final label = sendProvider.getSessionLabel(sessionId);
+      print('>>> IDENTIFICAÇÃO APLICADA AO CONTROLLER: $label');
+
+      if (label != null && widget.controller.text != label) {
+        widget.controller.text = label;
+      }
+
+      _initialize();
+    });
   }
 
   Future<void> _initialize() async {
@@ -66,6 +81,7 @@ class _SessionCardState extends State<SessionCard> {
 
       sendProvider.setToken(sessionId, token);
       sendProvider.setSessionLabel(sessionId, widget.controller.text);
+      sendProvider.setActiveSession(sessionId);
 
       final qrCodeBase64 = await homeProvider.startSession(
         context,
@@ -132,10 +148,12 @@ class _SessionCardState extends State<SessionCard> {
         });
 
         return AlertDialog(
-          backgroundColor: const Color(0xFF2D2D2F), // fundo escuro
-          title: const Text(
-            'Escaneie o QR Code',
-            style: TextStyle(color: Colors.white),
+          backgroundColor: const Color(0xFF2D2D2F),
+          title: Center(
+            child: const Text(
+              'Escaneie o QR Code',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
           content: SizedBox(
             width: 300,
@@ -191,6 +209,7 @@ class _SessionCardState extends State<SessionCard> {
                 child: TextField(
                   controller: widget.controller,
                   keyboardType: TextInputType.phone,
+                  enabled: status != "CONECTADO",
                   decoration: const InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
