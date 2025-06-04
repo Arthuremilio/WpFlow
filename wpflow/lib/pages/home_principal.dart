@@ -49,7 +49,7 @@ class HomePrincipal extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor:
                                     Theme.of(context).colorScheme.secondary,
-                                shadowColor: Colors.black.withOpacity(1),
+                                shadowColor: Colors.black,
                                 elevation: 7,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),

@@ -1,8 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../components/user_menu.dart';
 import '../components/header.dart';
 import '../models/send_message.dart';
+import '../components/dropdown_session.dart';
+import 'dart:convert';
+import '../components/simple_message_tab.dart';
+import '../components/simple_send_button.dart';
 
 class SimpleMessagePage extends StatefulWidget {
   const SimpleMessagePage({super.key});
@@ -11,22 +17,41 @@ class SimpleMessagePage extends StatefulWidget {
   State<SimpleMessagePage> createState() => _SimpleMessagePageState();
 }
 
-class _SimpleMessagePageState extends State<SimpleMessagePage> {
+class _SimpleMessagePageState extends State<SimpleMessagePage>
+    with TickerProviderStateMixin {
   String? selectedSession;
   final phoneController = TextEditingController();
   final messageController = TextEditingController();
+  PlatformFile? selectedImage;
+
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    final provider = Provider.of<SendMessageProvider>(context, listen: false);
+    selectedSession = provider.activeSessionId;
+  }
+
+  Future<void> pickFile(Function(File) onFileSelected) async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null && result.files.single.path != null) {
+      onFileSelected(File(result.files.single.path!));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SendMessageProvider>(context);
-    final sessions = provider.availableSessions;
+    final deviceSize = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: const Color(0xFF2D2D2F),
       body: Center(
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.98,
-          height: MediaQuery.of(context).size.height * 0.95,
+          width: deviceSize.width * 0.98,
+          height: deviceSize.height * 0.95,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.greenAccent, width: 1),
@@ -51,27 +76,18 @@ class _SimpleMessagePageState extends State<SimpleMessagePage> {
                         children: [
                           const Header(titulo: 'Envio de uma única mensagem!'),
                           const SizedBox(height: 20),
-                          DropdownButton<String>(
-                            value: selectedSession,
-                            hint: const Text('Selecione uma sessão'),
-                            items:
-                                provider.sessionLabels.entries
-                                    .map(
-                                      (entry) => DropdownMenuItem<String>(
-                                        value: entry.key, // sessionId completo
-                                        child: Text(
-                                          entry.value,
-                                        ), // rótulo (identificação)
-                                      ),
-                                    )
-                                    .toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectedSession = value;
-                              });
-                            },
+                          SizedBox(
+                            height: 30,
+                            child: DropdownSession(
+                              items: provider.sessionLabels,
+                              selectedValue: selectedSession,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedSession = value;
+                                });
+                              },
+                            ),
                           ),
-
                           const SizedBox(height: 20),
                           TextField(
                             controller: phoneController,
@@ -86,53 +102,23 @@ class _SimpleMessagePageState extends State<SimpleMessagePage> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          TextField(
-                            controller: messageController,
-                            maxLines: 5,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: const InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white12,
-                              labelText: 'Mensagem',
-                              labelStyle: TextStyle(color: Colors.white),
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () async {
-                              if (selectedSession != null &&
-                                  phoneController.text.isNotEmpty &&
-                                  messageController.text.isNotEmpty) {
-                                try {
-                                  await provider.sendMessage(
-                                    session: selectedSession!,
-                                    phone: phoneController.text,
-                                    message: messageController.text,
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Mensagem enviada com sucesso!',
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('$e'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
+                          MessageTabs(
+                            controller: _tabController,
+                            messageController: messageController,
+                            selectedImage: selectedImage,
+                            onImageSelected: (image) {
+                              setState(() {
+                                selectedImage = image;
+                              });
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Enviar Mensagem'),
+                          ),
+                          SendButton(
+                            selectedSession: selectedSession,
+                            phoneController: phoneController,
+                            messageController: messageController,
+                            selectedImage: selectedImage,
+                            tabController: _tabController,
+                            provider: provider,
                           ),
                         ],
                       ),
