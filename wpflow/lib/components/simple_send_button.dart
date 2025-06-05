@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:wpflow/models/session_manager.dart';
 import '../models/send_message.dart';
 
 class SendButton extends StatelessWidget {
@@ -10,6 +11,7 @@ class SendButton extends StatelessWidget {
   final PlatformFile? selectedImage;
   final TabController tabController;
   final SendMessageProvider provider;
+  final SessionManagerProvider sessionProvider;
 
   const SendButton({
     super.key,
@@ -19,6 +21,7 @@ class SendButton extends StatelessWidget {
     required this.selectedImage,
     required this.tabController,
     required this.provider,
+    required this.sessionProvider,
   });
 
   @override

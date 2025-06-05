@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wpflow/models/session_manager.dart';
 import '../models/home_user.dart';
-import '../models/send_message.dart';
 
 class SessionCard extends StatefulWidget {
   final String title;
@@ -23,19 +23,19 @@ class SessionCard extends StatefulWidget {
 
 class _SessionCardState extends State<SessionCard> {
   String status = "DESCONECTADO";
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final sendProvider = context.read<SendMessageProvider>();
+      final sessionProvider = context.read<SessionManagerProvider>();
       final sessionId = HomeProvider.buildSessionId(
         context,
         widget.sessionName,
       );
-      final label = sendProvider.getSessionLabel(sessionId);
-      print('>>> IDENTIFICAÇÃO APLICADA AO CONTROLLER: $label');
+      final label = sessionProvider.getSessionLabel(sessionId);
 
       if (label != null && widget.controller.text != label) {
         widget.controller.text = label;
@@ -58,9 +58,10 @@ class _SessionCardState extends State<SessionCard> {
   }
 
   Future<void> _connect() async {
+    setState(() => _isLoading = true);
     try {
       final homeProvider = context.read<HomeProvider>();
-      final sendProvider = context.read<SendMessageProvider>();
+      final sessionProvider = context.read<SessionManagerProvider>();
 
       homeProvider.setSessionLabel(
         context,
@@ -79,9 +80,9 @@ class _SessionCardState extends State<SessionCard> {
         return;
       }
 
-      sendProvider.setToken(sessionId, token);
-      sendProvider.setSessionLabel(sessionId, widget.controller.text);
-      sendProvider.setActiveSession(sessionId);
+      sessionProvider.setToken(sessionId, token);
+      sessionProvider.setSessionLabel(sessionId, widget.controller.text);
+      sessionProvider.setActiveSession(sessionId);
 
       final qrCodeBase64 = await homeProvider.startSession(
         context,
@@ -93,15 +94,30 @@ class _SessionCardState extends State<SessionCard> {
       }
     } catch (e) {
       _showError('Erro ao conectar: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _disconnect() async {
+    setState(() => _isLoading = true);
     try {
-      await context.read<HomeProvider>().logout(context, widget.sessionName);
+      final sessionProvider = context.read<SessionManagerProvider>();
+      final homeProvider = context.read<HomeProvider>();
+
+      final sessionId = HomeProvider.buildSessionId(
+        context,
+        widget.sessionName,
+      );
+
+      await homeProvider.logout(context, widget.sessionName);
+      sessionProvider.removeSession(sessionId);
+
       setState(() => status = "DESCONECTADO");
     } catch (e) {
       _showError('Erro ao desconectar: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -213,7 +229,7 @@ class _SessionCardState extends State<SessionCard> {
                   decoration: const InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    labelText: 'Identificação',
+                    hintText: 'Identificação',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -231,21 +247,41 @@ class _SessionCardState extends State<SessionCard> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
-                    onPressed: isConnected ? null : _connect,
+                    onPressed: _isLoading || isConnected ? null : _connect,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Conectar'),
+                    child:
+                        _isLoading && !isConnected
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.greenAccent,
+                              ),
+                            )
+                            : const Text('Conectar'),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
-                    onPressed: isConnected ? _disconnect : null,
+                    onPressed: _isLoading || !isConnected ? null : _disconnect,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Desconectar'),
+                    child:
+                        _isLoading && isConnected
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.greenAccent,
+                              ),
+                            )
+                            : const Text('Desconectar'),
                   ),
                 ],
               ),

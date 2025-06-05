@@ -3,11 +3,13 @@ import 'package:excel/excel.dart' as ex;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:wpflow/models/session_manager.dart';
 import '../components/user_menu.dart';
 import '../components/header.dart';
 import '../components/dropdown_session.dart';
-import '../models/send_message.dart';
+import '../models/send_buck_message_excel.dart';
 import '../components/excel_import_config.dart';
+import '../components/excel_preview_table.dart';
 
 class BuckMessageExcel extends StatefulWidget {
   const BuckMessageExcel({super.key});
@@ -17,19 +19,12 @@ class BuckMessageExcel extends StatefulWidget {
 }
 
 class _BuckMessageExcelState extends State<BuckMessageExcel> {
-  String? selectedSession;
   String? nameColumn;
   String? phoneColumn;
   String? messageColumn;
   int startRow = 1;
-  List<String> availableColumns = [];
+  List<String> availableColumns = ['A', 'B', 'C'];
   List<Map<String, String>> records = [];
-
-  @override
-  void initState() {
-    super.initState();
-    availableColumns = ['A', 'B', 'C'];
-  }
 
   Future<void> importExcel() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -76,102 +71,17 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
     }
   }
 
-  Widget columnDropdown(
-    String label,
-    String? value,
-    Function(String?) onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text('$label:', style: const TextStyle(color: Colors.white)),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            width: 160,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: Colors.grey),
-            ),
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: value,
-              dropdownColor: Colors.white,
-              underline: const SizedBox(),
-              hint: const Text(
-                "Selecione",
-                style: TextStyle(color: Colors.black),
-              ),
-              style: const TextStyle(color: Colors.black),
-              items:
-                  availableColumns.map((col) {
-                    return DropdownMenuItem(value: col, child: Text(col));
-                  }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget rowInput() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          const SizedBox(
-            width: 80,
-            child: Text('Linha:', style: TextStyle(color: Colors.white)),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            width: 160,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: Colors.grey),
-            ),
-            child: TextField(
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.black),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Ex: 2',
-                hintStyle: TextStyle(color: Colors.grey),
-              ),
-              onChanged: (value) {
-                final parsed = int.tryParse(value);
-                if (parsed != null && parsed >= 1) {
-                  setState(() {
-                    startRow = parsed;
-                  });
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final deviceSize = MediaQuery.of(context).size;
-    final provider = Provider.of<SendMessageProvider>(context);
+    final provider = Provider.of<SendBuckMessageExcelProvider>(context);
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       backgroundColor: const Color(0xFF2D2D2F),
       body: Center(
         child: Container(
-          width: deviceSize.width * 0.98,
-          height: deviceSize.height * 0.95,
+          width: size.width * 0.98,
+          height: size.height * 0.95,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.greenAccent, width: 1),
@@ -191,29 +101,70 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
                   const UserMenu(),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: ListView(
-                        children: [
-                          const Header(
-                            titulo: 'Envio de mensagem em massa via excel!',
-                          ),
-                          const SizedBox(height: 20),
-                          SizedBox(
-                            height: 30,
-                            child: DropdownSession(
-                              items: provider.sessionLabels,
-                              selectedValue: selectedSession,
-                              onChanged:
-                                  (value) =>
-                                      setState(() => selectedSession = value),
+                      padding: const EdgeInsets.all(20),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Header(
+                              titulo: 'Envio de mensagem em massa via excel!',
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          Center(
-                            child: Row(
-                              children: [
-                                Container(
-                                  child: Column(
+                            const SizedBox(height: 20),
+                            Consumer<SessionManagerProvider>(
+                              builder: (context, sessionProvider, _) {
+                                final sessionLabels =
+                                    sessionProvider.sessionLabels;
+                                final selected =
+                                    sessionLabels.containsKey(
+                                          sessionProvider.selectedSession,
+                                        )
+                                        ? sessionProvider.selectedSession
+                                        : null;
+
+                                return SizedBox(
+                                  height: 30,
+                                  child: DropdownSession(
+                                    items: sessionLabels,
+                                    selectedValue: selected,
+                                    onChanged: (value) {
+                                      sessionProvider.setSelectedSession(value);
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 20),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isSmallScreen =
+                                    constraints.maxWidth < 950;
+
+                                final tableWidget = Container(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 400,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        minWidth:
+                                            isSmallScreen
+                                                ? constraints.maxWidth
+                                                : 600,
+                                      ),
+                                      child: ExcelPreviewTable(
+                                        records: records,
+                                        nameColumn: nameColumn,
+                                        phoneColumn: phoneColumn,
+                                        messageColumn: messageColumn,
+                                      ),
+                                    ),
+                                  ),
+                                );
+
+                                if (isSmallScreen) {
+                                  return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
@@ -243,45 +194,124 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
                                         },
                                         onImport: importExcel,
                                       ),
+                                      const SizedBox(height: 20),
+                                      if (records.isNotEmpty) tableWidget,
                                     ],
-                                  ),
-                                ),
-                                if (records.isNotEmpty)
+                                  );
+                                } else {
+                                  return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ExcelImportConfigPanel(
+                                        columnOptions: availableColumns,
+                                        nameColumn: nameColumn,
+                                        phoneColumn: phoneColumn,
+                                        messageColumn: messageColumn,
+                                        startRow: startRow,
+                                        onNameChanged:
+                                            (val) => setState(
+                                              () => nameColumn = val,
+                                            ),
+                                        onPhoneChanged:
+                                            (val) => setState(
+                                              () => phoneColumn = val,
+                                            ),
+                                        onMessageChanged:
+                                            (val) => setState(
+                                              () => messageColumn = val,
+                                            ),
+                                        onStartRowChanged: (val) {
+                                          final parsed = int.tryParse(val);
+                                          if (parsed != null && parsed >= 1) {
+                                            setState(() => startRow = parsed);
+                                          }
+                                        },
+                                        onImport: importExcel,
+                                      ),
+                                      const SizedBox(width: 20),
+                                      if (records.isNotEmpty)
+                                        Expanded(child: tableWidget),
+                                    ],
+                                  );
+                                }
+                              },
+                            ),
+
+                            if (records.isNotEmpty) ...[
+                              const SizedBox(height: 24),
+                              Wrap(
+                                spacing: 24,
+                                runSpacing: 16,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
                                   SizedBox(
-                                    height: 400,
-                                    child: ListView.builder(
-                                      itemCount: records.length,
-                                      itemBuilder: (context, index) {
-                                        final rec = records[index];
-                                        return ListTile(
-                                          title: Text(
-                                            'Nome: ${rec[nameColumn ?? 'A']}, Telefone: ${rec[phoneColumn ?? 'B']}, Msg: ${rec[messageColumn ?? 'C']}',
-                                            style: const TextStyle(
-                                              color: Color.fromARGB(
-                                                255,
-                                                21,
-                                                19,
-                                                19,
-                                              ),
-                                            ),
+                                    width: 250,
+                                    child: ElevatedButton.icon(
+                                      icon: const Icon(Icons.send),
+                                      label: const Text("Enviar mensagens"),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
+                                        foregroundColor: Colors.black,
+                                        elevation: 7,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
-                                          trailing: Text(
-                                            rec['Status'] ?? '',
-                                            style: TextStyle(
-                                              color:
-                                                  rec['Status'] == 'Enviado'
-                                                      ? Colors.green
-                                                      : Colors.orange,
-                                            ),
-                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        await provider.sendMessagesFromExcel(
+                                          session:
+                                              context
+                                                  .read<
+                                                    SessionManagerProvider
+                                                  >()
+                                                  .selectedSession!,
+                                          records: records,
+                                          nameColumn: nameColumn!,
+                                          phoneColumn: phoneColumn!,
+                                          messageColumn: messageColumn!,
+                                          onProgress: () => setState(() {}),
                                         );
                                       },
                                     ),
                                   ),
-                              ],
-                            ),
-                          ),
-                        ],
+                                  if (provider.isSending)
+                                    SizedBox(
+                                      width: 500,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${provider.messagesSent} / ${provider.totalMessages} mensagens enviadas',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          LinearProgressIndicator(
+                                            value:
+                                                provider.totalMessages > 0
+                                                    ? provider.messagesSent /
+                                                        provider.totalMessages
+                                                    : 0,
+                                            backgroundColor: Colors.greenAccent,
+                                            color: Colors.black,
+                                            minHeight: 6,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

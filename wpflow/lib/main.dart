@@ -1,6 +1,8 @@
 import 'package:wpflow/models/home_user.dart';
 import 'package:flutter/material.dart';
+import 'package:wpflow/models/send_buck_message_excel.dart';
 import 'package:wpflow/models/send_message.dart';
+import 'package:wpflow/models/session_manager.dart';
 import 'package:wpflow/pages/buck_message_excel.dart';
 import 'models/auth.dart';
 import 'pages/home_principal.dart';
@@ -27,7 +29,39 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => Auth()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
-        ChangeNotifierProvider(create: (_) => SendMessageProvider()),
+        ChangeNotifierProvider(create: (_) => SessionManagerProvider()),
+        ChangeNotifierProxyProvider<
+          SessionManagerProvider,
+          SendMessageProvider
+        >(
+          create:
+              (context) => SendMessageProvider(
+                sessionManager: context.read<SessionManagerProvider>(),
+              ),
+          update:
+              (context, sessionManager, previous) =>
+                  previous ??
+                  SendMessageProvider(sessionManager: sessionManager),
+        ),
+        ChangeNotifierProxyProvider<
+          SessionManagerProvider,
+          SendBuckMessageExcelProvider
+        >(
+          create:
+              (_) => SendBuckMessageExcelProvider(
+                sessionManager: SessionManagerProvider(),
+              ),
+          update: (_, sessionManager, previous) {
+            if (previous == null) {
+              return SendBuckMessageExcelProvider(
+                sessionManager: sessionManager,
+              );
+            } else {
+              previous.sessionManager = sessionManager;
+              return previous;
+            }
+          },
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

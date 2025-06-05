@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:wpflow/models/session_manager.dart';
 import '../components/user_menu.dart';
 import '../components/header.dart';
 import '../models/send_message.dart';
@@ -18,7 +19,6 @@ class SimpleMessagePage extends StatefulWidget {
 
 class _SimpleMessagePageState extends State<SimpleMessagePage>
     with TickerProviderStateMixin {
-  String? selectedSession;
   final phoneController = TextEditingController();
   final messageController = TextEditingController();
   PlatformFile? selectedImage;
@@ -29,8 +29,6 @@ class _SimpleMessagePageState extends State<SimpleMessagePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    final provider = Provider.of<SendMessageProvider>(context, listen: false);
-    selectedSession = provider.activeSessionId;
   }
 
   Future<void> pickFile(Function(File) onFileSelected) async {
@@ -42,7 +40,8 @@ class _SimpleMessagePageState extends State<SimpleMessagePage>
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SendMessageProvider>(context);
+    final sendProvider = Provider.of<SendMessageProvider>(context);
+    final sessionProvider = Provider.of<SessionManagerProvider>(context);
     final deviceSize = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -75,17 +74,28 @@ class _SimpleMessagePageState extends State<SimpleMessagePage>
                         children: [
                           const Header(titulo: 'Envio de uma única mensagem!'),
                           const SizedBox(height: 20),
-                          SizedBox(
-                            height: 30,
-                            child: DropdownSession(
-                              items: provider.sessionLabels,
-                              selectedValue: selectedSession,
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedSession = value;
-                                });
-                              },
-                            ),
+                          Consumer<SessionManagerProvider>(
+                            builder: (context, sessionProvider, _) {
+                              final sessionLabels =
+                                  sessionProvider.sessionLabels;
+                              final selected =
+                                  sessionLabels.containsKey(
+                                        sessionProvider.selectedSession,
+                                      )
+                                      ? sessionProvider.selectedSession
+                                      : null;
+
+                              return SizedBox(
+                                height: 30,
+                                child: DropdownSession(
+                                  items: sessionLabels,
+                                  selectedValue: selected,
+                                  onChanged: (value) {
+                                    sessionProvider.setSelectedSession(value);
+                                  },
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(height: 20),
                           TextField(
@@ -112,12 +122,16 @@ class _SimpleMessagePageState extends State<SimpleMessagePage>
                             },
                           ),
                           SendButton(
-                            selectedSession: selectedSession,
+                            selectedSession:
+                                context
+                                    .watch<SessionManagerProvider>()
+                                    .selectedSession,
                             phoneController: phoneController,
                             messageController: messageController,
                             selectedImage: selectedImage,
                             tabController: _tabController,
-                            provider: provider,
+                            provider: sendProvider,
+                            sessionProvider: sessionProvider,
                           ),
                         ],
                       ),
