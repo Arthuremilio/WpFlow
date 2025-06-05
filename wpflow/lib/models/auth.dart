@@ -29,7 +29,7 @@ class Auth with ChangeNotifier {
   Future<void> _authenticate(String email, String password, String urlFragment,
       Function(String) onUserIdReceived) async {
     final url =
-        'https://identitytoolkit.googleapis.com/v1/accounts:$urlFragment?key=AIzaSyBEfYuZ7av3wOyPAPcfs6VtZlVUpYd_0sc';
+        'https://identitytoolkit.googleapis.com/v1/accounts:$urlFragment?key=AIzaSyANco6VWp64RdbxRhJphT7mERCJVsc60l4';
     final response = await http
         .post(
       Uri.parse(url),
@@ -76,7 +76,7 @@ class Auth with ChangeNotifier {
 
   Future<void> resetPassword(String email) async {
     final url =
-        'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyBEfYuZ7av3wOyPAPcfs6VtZlVUpYd_0sc';
+        'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyANco6VWp64RdbxRhJphT7mERCJVsc60l4';
     final response = await http.post(
       Uri.parse(url),
       body: jsonEncode({
