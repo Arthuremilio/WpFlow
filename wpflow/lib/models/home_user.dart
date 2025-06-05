@@ -90,7 +90,7 @@ class HomeProvider with ChangeNotifier {
   Future<void> logout(BuildContext context, String session) async {
     final sessionId = buildSessionId(context, session);
     final url = Uri.parse(
-      'http://localhost:21465/api/$sessionId/logout-session',
+      'http://localhost:21465/api/$sessionId/close-session',
     );
     final response = await http.post(
       url,
