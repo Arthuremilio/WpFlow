@@ -23,8 +23,23 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
   String? phoneColumn;
   String? messageColumn;
   int startRow = 1;
-  List<String> availableColumns = ['A', 'B', 'C'];
+  late List<String> availableColumns;
   List<Map<String, String>> records = [];
+
+  @override
+  void initState() {
+    super.initState();
+    availableColumns = List.generate(702, (index) => getExcelColumnName(index));
+  }
+
+  String getExcelColumnName(int index) {
+    String name = '';
+    while (index >= 0) {
+      name = String.fromCharCode(index % 26 + 65) + name;
+      index = (index ~/ 26) - 1;
+    }
+    return name;
+  }
 
   Future<void> importExcel() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -51,7 +66,7 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
       setState(() {
         availableColumns = List.generate(
           maxCols,
-          (index) => String.fromCharCode(65 + index),
+          (index) => getExcelColumnName(index),
         );
       });
 
@@ -59,10 +74,18 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
       for (var row in sheet.rows.skip(startRow - 1)) {
         Map<String, String> record = {};
         for (int i = 0; i < maxCols; i++) {
-          String columnLetter = String.fromCharCode(65 + i);
+          String columnLetter = getExcelColumnName(i);
           record[columnLetter] =
               i < row.length && row[i] != null ? row[i]!.value.toString() : '';
         }
+
+        final phone = record[phoneColumn ?? ''] ?? '';
+        final message = record[messageColumn ?? ''] ?? '';
+
+        if (phone.isEmpty || message.isEmpty) {
+          continue;
+        }
+
         record['Status'] = 'Pendente';
         records.add(record);
       }
