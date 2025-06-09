@@ -84,13 +84,25 @@ class _SessionCardState extends State<SessionCard> {
       sessionProvider.setSessionLabel(sessionId, widget.controller.text);
       sessionProvider.setActiveSession(sessionId);
 
-      final qrCodeBase64 = await homeProvider.startSession(
-        context,
-        widget.sessionName,
-      );
+      const maxAttempts = 10;
+      const delayBetweenAttempts = Duration(seconds: 2);
+
+      String? qrCodeBase64;
+      for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+        qrCodeBase64 = await homeProvider.startSession(
+          context,
+          widget.sessionName,
+        );
+        if (qrCodeBase64 != null) {
+          break;
+        }
+        await Future.delayed(delayBetweenAttempts);
+      }
 
       if (qrCodeBase64 != null) {
         _showQrCodeDialog(qrCodeBase64);
+      } else {
+        _showError('Não foi possível gerar o QR Code após várias tentativas.');
       }
     } catch (e) {
       _showError('Erro ao conectar: $e');

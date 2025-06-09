@@ -90,6 +90,20 @@ class HomeProvider with ChangeNotifier {
   Future<void> logout(BuildContext context, String session) async {
     final sessionId = buildSessionId(context, session);
     final url = Uri.parse(
+      'http://localhost:21465/api/$sessionId/logout-session',
+    );
+    final response = await http.post(
+      url,
+      headers: {'Authorization': 'Bearer ${getToken(context, session)}'},
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Erro ao desconectar sessão: ${response.body}');
+    }
+  }
+
+  Future<void> CloseSession(BuildContext context, String session) async {
+    final sessionId = buildSessionId(context, session);
+    final url = Uri.parse(
       'http://localhost:21465/api/$sessionId/close-session',
     );
     final response = await http.post(

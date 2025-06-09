@@ -68,14 +68,14 @@ class UserMenu extends StatelessWidget {
                 );
 
                 try {
-                  await homeProvider.logout(context, sessionName);
+                  await homeProvider.CloseSession(context, sessionName);
                   sessionProvider.removeSession(sessionId);
                 } catch (e) {
                   debugPrint('Erro ao desconectar $sessionName: $e');
                 }
               }
 
-              Navigator.of(context).pop(); // ou outra rota final
+              Navigator.of(context).pop();
             },
           ),
         ],
