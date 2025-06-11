@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1053623085336",
+    "project_id": "wpflow-f0e71",
+    "storage_bucket": "wpflow-f0e71.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053623085336:android:afd698f90bb7c542b9166d",
+        "android_client_info": {
+          "package_name": "com.example.wpflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6MyGWNjSc4o8cObVOpBnt2OM_piHWcFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

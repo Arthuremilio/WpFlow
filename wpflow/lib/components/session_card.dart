@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wpflow/models/session_manager.dart';
+import 'package:wpflow/models/user.dart';
 import '../models/home_user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SessionCard extends StatefulWidget {
   final String title;
@@ -28,81 +30,136 @@ class _SessionCardState extends State<SessionCard> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final sessionProvider = context.read<SessionManagerProvider>();
-      final sessionId = HomeProvider.buildSessionId(
-        context,
-        widget.sessionName,
-      );
-      final label = sessionProvider.getSessionLabel(sessionId);
-
-      if (label != null && widget.controller.text != label) {
-        widget.controller.text = label;
-      }
-
-      _initialize();
+    print('Entrou no initState');
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _restoreSessionIfActive();
     });
   }
 
-  Future<void> _initialize() async {
+  Future<void> _restoreSessionIfActive() async {
     try {
-      await context.read<HomeProvider>().generateToken(
-        context,
-        widget.sessionName,
-      );
-      await _checkStatus();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userId = userProvider.userId;
+
+      if (userId == null) {
+        debugPrint('Abortado: userId é null');
+        return;
+      }
+
+      final sessionId = '$userId${widget.sessionName}';
+
+      final query =
+          await FirebaseFirestore.instance
+              .collection('whatsapp_sessions')
+              .where('session', isEqualTo: widget.sessionName)
+              .where('userId', isEqualTo: userId)
+              .where('disconnectAt', isNull: true)
+              .orderBy('connectAt', descending: true)
+              .limit(1)
+              .get();
+
+      if (query.docs.isNotEmpty) {
+        final data = query.docs.first.data();
+        final token = data['token'] as String?;
+        final label = data['label'] as String?;
+
+        if (label != null && widget.controller.text != label) {
+          widget.controller.text = label;
+        }
+
+        if (token != null) {
+          final result = await context.read<HomeProvider>().getStatus(
+            context,
+            widget.sessionName,
+            sessionId: sessionId,
+            token: token,
+          );
+
+          setState(() {
+            status = result == "CONNECTED" ? "CONECTADO" : "DESCONECTADO";
+          });
+        }
+      } else {
+        debugPrint('Nenhuma sessão ativa encontrada no Firestore');
+      }
     } catch (e) {
-      _showError('Erro ao iniciar sessão: $e');
+      debugPrint('Erro ao restaurar sessão: $e');
+      _showError('Erro ao restaurar sessão: $e');
+    }
+  }
+
+  Future<void> _saveSessionToFirestore({
+    required String session,
+    required String label,
+    required String token,
+    required String userId,
+  }) async {
+    final payload = {
+      'session': session,
+      'label': label,
+      'token': token,
+      'userId': userId,
+      'connectAt': FieldValue.serverTimestamp(),
+      'disconnectAt': null,
+    };
+
+    try {
+      debugPrint('Salvando no Firestore: $payload');
+      await FirebaseFirestore.instance
+          .collection('whatsapp_sessions')
+          .add(payload);
+    } on FirebaseException catch (e) {
+      debugPrint('Erro Firebase: ${e.message}');
+      throw Exception('Erro ao salvar sessão no Firestore: ${e.message}');
+    } catch (e) {
+      debugPrint('Erro inesperado: ${e.toString()}');
+      throw Exception('Erro inesperado ao salvar sessão');
+    }
+  }
+
+  Future<void> _updateSessionDisconnection(String session, String token) async {
+    final query =
+        await FirebaseFirestore.instance
+            .collection('whatsapp_sessions')
+            .where('session', isEqualTo: session)
+            .where('token', isEqualTo: token)
+            .where('disconnectAt', isNull: true)
+            .get();
+
+    if (query.docs.isNotEmpty) {
+      await query.docs.first.reference.update({
+        'disconnectAt': FieldValue.serverTimestamp(),
+      });
     }
   }
 
   Future<void> _connect() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      status = 'CONECTANDO';
+    });
     try {
-      final homeProvider = context.read<HomeProvider>();
-      final sessionProvider = context.read<SessionManagerProvider>();
+      final hp = context.read<HomeProvider>();
+      final userId = Provider.of<UserProvider>(context, listen: false).userId!;
+      final label = widget.controller.text;
 
-      homeProvider.setSessionLabel(
-        context,
-        widget.sessionName,
-        widget.controller.text,
+      final token = await hp.generateToken(context, widget.sessionName);
+      final sessionId = '$userId${widget.sessionName}';
+
+      final qr = await hp.startSession(
+        context: context,
+        session: widget.sessionName,
+        token: token,
       );
-      final sessionId = HomeProvider.buildSessionId(
-        context,
-        widget.sessionName,
-      );
 
-      final token = homeProvider.getToken(context, widget.sessionName);
-
-      if (token == null) {
-        _showError('Token não encontrado para a sessão.');
-        return;
-      }
-
-      sessionProvider.setToken(sessionId, token);
-      sessionProvider.setSessionLabel(sessionId, widget.controller.text);
-      sessionProvider.setActiveSession(sessionId);
-
-      const maxAttempts = 10;
-      const delayBetweenAttempts = Duration(seconds: 2);
-
-      String? qrCodeBase64;
-      for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-        qrCodeBase64 = await homeProvider.startSession(
-          context,
-          widget.sessionName,
+      if (qr != null) {
+        await _showQrCodeDialog(
+          qrBase64: qr,
+          sessionId: sessionId,
+          token: token,
+          label: label,
+          userId: userId,
         );
-        if (qrCodeBase64 != null) {
-          break;
-        }
-        await Future.delayed(delayBetweenAttempts);
-      }
-
-      if (qrCodeBase64 != null) {
-        _showQrCodeDialog(qrCodeBase64);
-      } else {
-        _showError('Não foi possível gerar o QR Code após várias tentativas.');
       }
     } catch (e) {
       _showError('Erro ao conectar: $e');
@@ -114,45 +171,62 @@ class _SessionCardState extends State<SessionCard> {
   Future<void> _disconnect() async {
     setState(() => _isLoading = true);
     try {
-      final sessionProvider = context.read<SessionManagerProvider>();
-      final homeProvider = context.read<HomeProvider>();
+      final userId = Provider.of<UserProvider>(context, listen: false).userId;
+      final sessionId = '$userId${widget.sessionName}';
 
-      final sessionId = HomeProvider.buildSessionId(
+      final query =
+          await FirebaseFirestore.instance
+              .collection('whatsapp_sessions')
+              .where('session', isEqualTo: widget.sessionName)
+              .where('userId', isEqualTo: userId)
+              .where('disconnectAt', isNull: true)
+              .orderBy('connectAt', descending: true)
+              .limit(1)
+              .get();
+
+      if (query.docs.isEmpty) {
+        _showError('Sessão ativa não encontrada para desconectar.');
+        return;
+      }
+
+      final data = query.docs.first.data();
+      final token = data['token'] as String?;
+
+      if (token == null) {
+        _showError('Token não encontrado para desconectar.');
+        return;
+      }
+
+      await context.read<HomeProvider>().logout(
         context,
         widget.sessionName,
+        sessionId: sessionId,
+        token: token,
       );
 
-      await homeProvider.logout(context, widget.sessionName);
-      sessionProvider.removeSession(sessionId);
-
-      setState(() => status = "DESCONECTADO");
+      await _updateSessionDisconnection(widget.sessionName, token);
     } catch (e) {
       _showError('Erro ao desconectar: $e');
     } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _checkStatus() async {
-    try {
-      final result = await context.read<HomeProvider>().getStatus(
-        context,
-        widget.sessionName,
-      );
       setState(() {
-        status = result == "CONNECTED" ? "CONECTADO" : "DESCONECTADO";
+        _isLoading = false;
+        status = 'DESCONECTADO';
       });
-    } catch (e) {
-      _showError('Erro ao verificar status: $e');
     }
   }
 
-  void _showQrCodeDialog(String base64Data) {
-    final base64String = base64Data.split(',').last;
+  Future<void> _showQrCodeDialog({
+    required String qrBase64,
+    required String sessionId,
+    required String token,
+    required String label,
+    required String userId,
+  }) async {
+    final base64String = qrBase64.split(',').last;
     Timer? timeoutTimer;
     Timer? pollingTimer;
 
-    showDialog(
+    return showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -163,22 +237,37 @@ class _SessionCardState extends State<SessionCard> {
         pollingTimer = Timer.periodic(const Duration(seconds: 2), (
           timer,
         ) async {
-          final result = await context.read<HomeProvider>().getStatus(
-            context,
-            widget.sessionName,
-          );
-          if (result == "CONNECTED" && mounted) {
-            timer.cancel();
-            timeoutTimer?.cancel();
-            Navigator.of(context).pop();
-            setState(() => status = "CONECTADO");
+          try {
+            final result = await context.read<HomeProvider>().getStatus(
+              context,
+              widget.sessionName,
+              sessionId: sessionId,
+              token: token,
+            );
+
+            if (result == "CONNECTED" && mounted) {
+              timer.cancel();
+              timeoutTimer?.cancel();
+              Navigator.of(context).pop();
+
+              await _saveSessionToFirestore(
+                session: widget.sessionName,
+                label: label,
+                token: token,
+                userId: userId,
+              );
+
+              setState(() => status = "CONECTADO");
+            }
+          } catch (e) {
+            // ignore erros de polling silenciosamente
           }
         });
 
         return AlertDialog(
           backgroundColor: const Color(0xFF2D2D2F),
-          title: Center(
-            child: const Text(
+          title: const Center(
+            child: Text(
               'Escaneie o QR Code',
               style: TextStyle(color: Colors.white),
             ),
