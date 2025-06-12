@@ -34,38 +34,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => SessionManagerProvider()),
-        ChangeNotifierProxyProvider<
-          SessionManagerProvider,
-          SendMessageProvider
-        >(
-          create:
-              (context) => SendMessageProvider(
-                sessionManager: context.read<SessionManagerProvider>(),
-              ),
-          update:
-              (context, sessionManager, previous) =>
-                  previous ??
-                  SendMessageProvider(sessionManager: sessionManager),
-        ),
-        ChangeNotifierProxyProvider<
-          SessionManagerProvider,
-          SendBuckMessageExcelProvider
-        >(
-          create:
-              (_) => SendBuckMessageExcelProvider(
-                sessionManager: SessionManagerProvider(),
-              ),
-          update: (_, sessionManager, previous) {
-            if (previous == null) {
-              return SendBuckMessageExcelProvider(
-                sessionManager: sessionManager,
-              );
-            } else {
-              previous.sessionManager = sessionManager;
-              return previous;
-            }
-          },
-        ),
+        ChangeNotifierProvider(create: (_) => SendMessageProvider()),
+        ChangeNotifierProvider(create: (_) => SendBuckMessageExcelProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

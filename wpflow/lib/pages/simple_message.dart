@@ -29,13 +29,9 @@ class _SimpleMessagePageState extends State<SimpleMessagePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-  }
-
-  Future<void> pickFile(Function(File) onFileSelected) async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result != null && result.files.single.path != null) {
-      onFileSelected(File(result.files.single.path!));
-    }
+    Future.microtask(() {
+      context.read<SessionManagerProvider>().fetchSessionsForContext(context);
+    });
   }
 
   @override

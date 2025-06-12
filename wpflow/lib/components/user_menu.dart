@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wpflow/models/home_user.dart';
-import 'package:wpflow/models/session_manager.dart';
 import '../utils/app-routes.dart';
-import 'package:provider/provider.dart';
 
 class UserMenu extends StatelessWidget {
   const UserMenu({super.key});
@@ -50,31 +47,6 @@ class UserMenu extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.exit_to_app, color: Colors.white),
             onPressed: () async {
-              final sessionProvider = Provider.of<SessionManagerProvider>(
-                context,
-                listen: false,
-              );
-              final homeProvider = Provider.of<HomeProvider>(
-                context,
-                listen: false,
-              );
-
-              final sessionIds = sessionProvider.availableSessions;
-
-              for (final sessionId in sessionIds) {
-                final sessionName = sessionId.replaceAll(
-                  RegExp(r'^.*(?=session\d)'),
-                  '',
-                );
-
-                try {
-                  await homeProvider.CloseSession(context, sessionName);
-                  sessionProvider.removeSession(sessionId);
-                } catch (e) {
-                  debugPrint('Erro ao desconectar $sessionName: $e');
-                }
-              }
-
               Navigator.of(context).pop();
             },
           ),

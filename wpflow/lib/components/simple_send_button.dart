@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:wpflow/models/session_manager.dart';
+import 'package:wpflow/models/user.dart';
 import '../models/send_message.dart';
+import 'package:provider/provider.dart';
 
 class SendButton extends StatelessWidget {
   final String? selectedSession;
@@ -41,13 +43,32 @@ class SendButton extends StatelessWidget {
               return;
             }
 
+            final token = sessionProvider.getToken(selectedSession!);
+            if (token == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Token não encontrado para a sessão.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+
+            final userProvider = Provider.of<UserProvider>(
+              context,
+              listen: false,
+            );
+            final userId = userProvider.userId ?? '';
+            final sessionName = '${userId}$selectedSession';
+
             try {
               switch (tabController.index) {
                 case 0:
                   await provider.sendTextMessage(
-                    session: selectedSession!,
+                    session: sessionName,
                     phone: phoneController.text,
                     message: messageController.text,
+                    token: token,
                   );
                   break;
                 case 1:
@@ -69,9 +90,10 @@ class SendButton extends StatelessWidget {
                   final base64Data = 'data:$mimeType;base64,$base64Str';
 
                   await provider.sendImageBase64(
-                    session: selectedSession!,
+                    session: sessionName,
                     phone: phoneController.text,
                     base64Data: base64Data,
+                    token: token,
                   );
                   break;
               }
@@ -97,6 +119,7 @@ class SendButton extends StatelessWidget {
               );
             }
           },
+
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             foregroundColor: Colors.white,

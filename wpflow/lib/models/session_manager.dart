@@ -1,56 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:wpflow/models/user.dart';
+import 'package:provider/provider.dart';
 
 class SessionManagerProvider with ChangeNotifier {
   final Map<String, String> _sessionTokens = {};
   final Map<String, String> _sessionLabels = {};
-  String? _activeSessionId;
   String? _selectedSession;
-
-  void setActiveSession(String sessionId) {
-    _activeSessionId = sessionId;
-    notifyListeners();
-  }
-
-  String? get activeSession => _activeSessionId;
-
-  void setToken(String session, String token) {
-    _sessionTokens[session] = token;
-    notifyListeners();
-  }
-
-  void setSessionLabel(String session, String label) {
-    _sessionLabels[session] = label;
-    notifyListeners();
-  }
-
-  String? getSessionLabel(String sessionId) {
-    return _sessionLabels[sessionId];
-  }
-
-  void removeSession(String sessionId) {
-    _sessionTokens.remove(sessionId);
-    _sessionLabels.remove(sessionId);
-
-    if (_activeSessionId == sessionId) {
-      _activeSessionId = null;
-    }
-    if (_selectedSession == sessionId) {
-      _selectedSession = null;
-    }
-
-    notifyListeners();
-  }
-
-  Map<String, String> get sessionLabels => _sessionLabels;
-
-  List<String> get availableSessions => _sessionTokens.keys.toList();
-
-  String? getToken(String sessionId) => _sessionTokens[sessionId];
 
   String? get selectedSession => _selectedSession;
 
   void setSelectedSession(String? sessionId) {
     _selectedSession = sessionId;
     notifyListeners();
+  }
+
+  Map<String, String> get sessionLabels => _sessionLabels;
+
+  Future<void> fetchConnectedSessions(String userId) async {
+    final query =
+        await FirebaseFirestore.instance
+            .collection('whatsapp_sessions')
+            .where('userId', isEqualTo: userId)
+            .where('disconnectAt', isNull: true)
+            .orderBy('connectAt', descending: true)
+            .get();
+
+    _sessionLabels.clear();
+    _sessionTokens.clear();
+
+    for (final doc in query.docs) {
+      final data = doc.data();
+      final session = data['session'];
+      final label = data['label'] ?? session;
+      final token = data['token'];
+
+      print('Session: $session, Label: $label, Token: $token'); // <-- debug
+
+      if (session != null && token != null) {
+        _sessionLabels[session] = label;
+        _sessionTokens[session] = token;
+      }
+    }
+
+    notifyListeners();
+  }
+
+  String? getToken(String sessionId) => _sessionTokens[sessionId];
+
+  Future<void> fetchSessionsForContext(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userId = userProvider.userId;
+
+    if (userId != null) {
+      await fetchConnectedSessions(userId);
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wpflow/models/session_manager.dart';
+import 'package:wpflow/models/user.dart';
 import '../components/user_menu.dart';
 import '../components/header.dart';
 import '../components/dropdown_session.dart';
@@ -30,6 +31,9 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
   void initState() {
     super.initState();
     availableColumns = List.generate(702, (index) => getExcelColumnName(index));
+    Future.microtask(() {
+      context.read<SessionManagerProvider>().fetchSessionsForContext(context);
+    });
   }
 
   String getExcelColumnName(int index) {
@@ -287,13 +291,55 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
                                         ),
                                       ),
                                       onPressed: () async {
+                                        final sessionProvider =
+                                            context
+                                                .read<SessionManagerProvider>();
+                                        final selectedSession =
+                                            sessionProvider.selectedSession;
+
+                                        if (selectedSession == null) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Selecione uma sessão válida.',
+                                              ),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        final token = sessionProvider.getToken(
+                                          selectedSession,
+                                        );
+                                        if (token == null) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Token não encontrado para a sessão.',
+                                              ),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        final userProvider =
+                                            Provider.of<UserProvider>(
+                                              context,
+                                              listen: false,
+                                            );
+                                        final userId =
+                                            userProvider.userId ?? '';
+                                        final sessionName =
+                                            '${userId}$selectedSession';
+
                                         await provider.sendMessagesFromExcel(
-                                          session:
-                                              context
-                                                  .read<
-                                                    SessionManagerProvider
-                                                  >()
-                                                  .selectedSession!,
+                                          session: sessionName,
+                                          token: token,
                                           records: records,
                                           nameColumn: nameColumn!,
                                           phoneColumn: phoneColumn!,
