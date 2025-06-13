@@ -105,11 +105,11 @@ class SendBuckMessageExcelProvider with ChangeNotifier {
           token: token,
         );
         rec['Status'] = 'Enviado';
+        messagesSent++;
       } catch (e) {
         rec['Status'] = 'Erro';
       }
 
-      messagesSent++;
       notifyListeners();
       onProgress();
 
