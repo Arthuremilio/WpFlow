@@ -275,14 +275,23 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
                                   SizedBox(
                                     width: 250,
                                     child: ElevatedButton.icon(
-                                      icon: const Icon(Icons.send),
-                                      label: const Text("Enviar mensagens"),
+                                      icon:
+                                          provider.isSending
+                                              ? const Icon(Icons.cancel)
+                                              : const Icon(Icons.send),
+                                      label: Text(
+                                        provider.isSending
+                                            ? "Cancelar mensagens"
+                                            : "Enviar mensagens",
+                                      ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor:
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.secondary,
-                                        foregroundColor: Colors.black,
+                                            provider.isSending
+                                                ? Colors.red
+                                                : Theme.of(
+                                                  context,
+                                                ).colorScheme.secondary,
+                                        foregroundColor: Colors.white,
                                         elevation: 7,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
@@ -290,63 +299,137 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
                                           ),
                                         ),
                                       ),
-                                      onPressed: () async {
-                                        final sessionProvider =
-                                            context
-                                                .read<SessionManagerProvider>();
-                                        final selectedSession =
-                                            sessionProvider.selectedSession;
+                                      onPressed:
+                                          provider.isSending
+                                              ? () async {
+                                                final confirm = await showDialog<
+                                                  bool
+                                                >(
+                                                  context: context,
+                                                  builder:
+                                                      (context) => AlertDialog(
+                                                        title: const Text(
+                                                          'Cancelar envio',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                        content: const Text(
+                                                          'Tem certeza que deseja cancelar o envio de mensagens?',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                        actions: [
+                                                          TextButton(
+                                                            style: TextButton.styleFrom(
+                                                              backgroundColor:
+                                                                  Colors.red,
+                                                              foregroundColor:
+                                                                  Colors.white,
+                                                            ),
+                                                            onPressed:
+                                                                () =>
+                                                                    Navigator.of(
+                                                                      context,
+                                                                    ).pop(
+                                                                      false,
+                                                                    ),
+                                                            child: const Text(
+                                                              'Não',
+                                                            ),
+                                                          ),
+                                                          TextButton(
+                                                            style: TextButton.styleFrom(
+                                                              backgroundColor:
+                                                                  Colors.green,
+                                                              foregroundColor:
+                                                                  Colors.white,
+                                                            ),
+                                                            onPressed:
+                                                                () =>
+                                                                    Navigator.of(
+                                                                      context,
+                                                                    ).pop(true),
+                                                            child: const Text(
+                                                              'Sim',
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                );
+                                                if (confirm == true) {
+                                                  provider.stopSending();
+                                                  provider.reset();
+                                                  setState(() {
+                                                    records.clear();
+                                                  });
+                                                }
+                                              }
+                                              : () async {
+                                                final sessionProvider =
+                                                    context
+                                                        .read<
+                                                          SessionManagerProvider
+                                                        >();
+                                                final selectedSession =
+                                                    sessionProvider
+                                                        .selectedSession;
 
-                                        if (selectedSession == null) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Selecione uma sessão válida.',
-                                              ),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                          return;
-                                        }
+                                                if (selectedSession == null) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Selecione uma sessão válida.',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
 
-                                        final token = sessionProvider.getToken(
-                                          selectedSession,
-                                        );
-                                        if (token == null) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Token não encontrado para a sessão.',
-                                              ),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                          return;
-                                        }
-                                        final userProvider =
-                                            Provider.of<UserProvider>(
-                                              context,
-                                              listen: false,
-                                            );
-                                        final userId =
-                                            userProvider.userId ?? '';
-                                        final sessionName =
-                                            '${userId}$selectedSession';
+                                                final token = sessionProvider
+                                                    .getToken(selectedSession);
+                                                if (token == null) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Token não encontrado para a sessão.',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+                                                final userProvider =
+                                                    Provider.of<UserProvider>(
+                                                      context,
+                                                      listen: false,
+                                                    );
+                                                final userId =
+                                                    userProvider.userId ?? '';
+                                                final sessionName =
+                                                    '${userId}$selectedSession';
 
-                                        await provider.sendMessagesFromExcel(
-                                          session: sessionName,
-                                          token: token,
-                                          records: records,
-                                          nameColumn: nameColumn!,
-                                          phoneColumn: phoneColumn!,
-                                          messageColumn: messageColumn!,
-                                          onProgress: () => setState(() {}),
-                                        );
-                                      },
+                                                await provider
+                                                    .sendMessagesFromExcel(
+                                                      session: sessionName,
+                                                      token: token,
+                                                      records: records,
+                                                      nameColumn: nameColumn!,
+                                                      phoneColumn: phoneColumn!,
+                                                      messageColumn:
+                                                          messageColumn!,
+                                                      onProgress:
+                                                          () => setState(() {}),
+                                                    );
+                                              },
                                     ),
                                   ),
                                   if (provider.isSending)
@@ -374,6 +457,29 @@ class _BuckMessageExcelState extends State<BuckMessageExcel> {
                                             minHeight: 6,
                                           ),
                                         ],
+                                      ),
+                                    ),
+                                  const SizedBox(width: 16),
+                                  if (records.isNotEmpty &&
+                                      records[0]['Status'] != 'Pendente')
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        shape: const CircleBorder(),
+                                        padding: const EdgeInsets.all(12),
+                                      ),
+                                      onPressed: () {
+                                        if (provider.isPaused) {
+                                          provider.resumeSending();
+                                        } else {
+                                          provider.pauseSending();
+                                        }
+                                      },
+                                      child: Icon(
+                                        provider.isPaused
+                                            ? Icons.play_arrow
+                                            : Icons.pause,
+                                        color: Colors.white,
                                       ),
                                     ),
                                 ],

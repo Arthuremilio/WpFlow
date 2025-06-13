@@ -4,8 +4,33 @@ import 'package:http/http.dart' as http;
 
 class SendBuckMessageExcelProvider with ChangeNotifier {
   bool isSending = false;
+  bool shouldStop = false;
+  bool isPaused = false;
   int totalMessages = 0;
   int messagesSent = 0;
+
+  void stopSending() {
+    shouldStop = true;
+  }
+
+  void pauseSending() {
+    isPaused = true;
+    notifyListeners();
+  }
+
+  void resumeSending() {
+    isPaused = false;
+    notifyListeners();
+  }
+
+  void reset() {
+    isSending = false;
+    shouldStop = false;
+    isPaused = false;
+    totalMessages = 0;
+    messagesSent = 0;
+    notifyListeners();
+  }
 
   Future<void> sendTextMessage({
     required String session,
@@ -41,11 +66,22 @@ class SendBuckMessageExcelProvider with ChangeNotifier {
     required VoidCallback onProgress,
   }) async {
     isSending = true;
+    shouldStop = false;
+    isPaused = false;
     totalMessages = records.length;
     messagesSent = 0;
     notifyListeners();
 
     for (int i = 0; i < records.length; i++) {
+      if (shouldStop) break;
+
+      while (isPaused) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (shouldStop) break;
+      }
+
+      if (shouldStop) break;
+
       final rec = records[i];
       final phone = rec[phoneColumn] ?? '';
       final name = rec[nameColumn] ?? '';
@@ -81,7 +117,6 @@ class SendBuckMessageExcelProvider with ChangeNotifier {
         Duration(seconds: 5 + (DateTime.now().millisecondsSinceEpoch % 26)),
       );
     }
-
     isSending = false;
     notifyListeners();
   }
