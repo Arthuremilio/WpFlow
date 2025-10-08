@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'dart:math';
 
 class SendBuckMessageExcelProvider with ChangeNotifier {
   bool isSending = false;
@@ -113,9 +114,7 @@ class SendBuckMessageExcelProvider with ChangeNotifier {
       notifyListeners();
       onProgress();
 
-      await Future.delayed(
-        Duration(seconds: 5 + (DateTime.now().millisecondsSinceEpoch % 26)),
-      );
+      await Future.delayed(Duration(seconds: 15 + Random().nextInt(45)));
     }
     isSending = false;
     notifyListeners();
