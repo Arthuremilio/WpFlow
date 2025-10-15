@@ -114,7 +114,7 @@ class SendBuckMessageExcelProvider with ChangeNotifier {
       notifyListeners();
       onProgress();
 
-      await Future.delayed(Duration(seconds: 15 + Random().nextInt(45)));
+      await Future.delayed(Duration(seconds: 87 + Random().nextInt(120)));
     }
     isSending = false;
     notifyListeners();
