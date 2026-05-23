@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:wpflow/models/user.dart';
+import '../../../core/utils/user.dart';
 import 'package:provider/provider.dart';
 
 class SessionManagerProvider with ChangeNotifier {

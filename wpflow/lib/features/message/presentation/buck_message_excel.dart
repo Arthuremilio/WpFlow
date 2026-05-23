@@ -3,14 +3,14 @@ import 'package:excel/excel.dart' as ex;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wpflow/models/session_manager.dart';
-import 'package:wpflow/models/user.dart';
-import '../components/user_menu.dart';
-import '../components/header.dart';
-import '../components/dropdown_session.dart';
-import '../models/send_buck_message_excel.dart';
-import '../components/excel_import_config.dart';
-import '../components/excel_preview_table.dart';
+import 'package:wpflow/features/wpp_session/controllers/session_manager.dart';
+import 'package:wpflow/core/utils/user.dart';
+import '../../../core/widgets/user_menu.dart';
+import '../../../core/widgets/header.dart';
+import '../../home/widgets/dropdown_session.dart';
+import '../data/send_buck_message_excel.dart';
+import '../widgets/excel_import_config.dart';
+import '../widgets/excel_preview_table.dart';
 
 class BuckMessageExcel extends StatefulWidget {
   const BuckMessageExcel({super.key});

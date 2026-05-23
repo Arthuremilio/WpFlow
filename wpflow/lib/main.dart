@@ -1,21 +1,21 @@
-import 'package:wpflow/models/home_user.dart';
+import 'package:wpflow/features/home/data/home_user.dart';
 import 'package:flutter/material.dart';
-import 'package:wpflow/models/send_buck_message_excel.dart';
-import 'package:wpflow/models/send_message.dart';
-import 'package:wpflow/models/session_manager.dart';
-import 'package:wpflow/pages/buck_message_excel.dart';
-import 'models/auth.dart';
-import 'pages/home_principal.dart';
-import 'pages/auth_page.dart';
-import 'pages/home_user_page.dart';
-import 'utils/app-routes.dart';
+import 'package:wpflow/features/message/data/send_buck_message_excel.dart';
+import 'package:wpflow/features/message/data/send_message.dart';
+import 'package:wpflow/features/wpp_session/controllers/session_manager.dart';
+import 'package:wpflow/features/message/presentation/buck_message_excel.dart';
+import 'features/auth/data/auth.dart';
+import 'features/home/presentation/home_principal.dart';
+import 'features/auth/presentation/auth_page.dart';
+import 'features/home/presentation/home_user_page.dart';
+import 'core/routes/app-routes.dart';
 import 'package:provider/provider.dart';
-import 'pages/settings_page.dart';
-import 'pages/forgot_password_page.dart';
-import 'pages/simple_message.dart';
-import 'models/user.dart';
+import 'settings/presentation/settings_page.dart';
+import 'features/auth/presentation/forgot_password_page.dart';
+import 'features/message/presentation/simple_message.dart';
+import 'core/utils/user.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'core/config/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

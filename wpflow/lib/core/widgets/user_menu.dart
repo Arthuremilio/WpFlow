@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/app-routes.dart';
+import '../routes/app-routes.dart';
 
 class UserMenu extends StatelessWidget {
   const UserMenu({super.key});
@@ -17,7 +17,7 @@ class UserMenu extends StatelessWidget {
               Navigator.of(context).pushReplacementNamed(AppRoutes.HOMEUSER);
             },
             child: Image.asset(
-              'lib/assets/img/logo/wpFlow_logo.png',
+              'lib/assets/img/wpFlow_logo.png',
               width: 40,
               height: 40,
             ),

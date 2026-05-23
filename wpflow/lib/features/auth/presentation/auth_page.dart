@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../components/auth_form.dart';
-import '../components/custom_app_bar.dart';
+import '../widgets/auth_form.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});
@@ -23,7 +23,7 @@ class AuthPage extends StatelessWidget {
                 Container(
                   width: deviceSize.width * 0.6,
                   child: Image.asset(
-                    'lib/assets/img/logo/wpFlow.png',
+                    'lib/assets/img/wpFlow.png',
                     height: deviceSize.height * 0.2,
                     width: double.infinity,
                     fit: BoxFit.contain,

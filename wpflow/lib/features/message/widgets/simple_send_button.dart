@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:wpflow/models/session_manager.dart';
-import 'package:wpflow/models/user.dart';
-import '../models/send_message.dart';
+import 'package:wpflow/features/wpp_session/controllers/session_manager.dart';
+import 'package:wpflow/core/utils/user.dart';
+import '../data/send_message.dart';
 import 'package:provider/provider.dart';
 
 class SendButton extends StatelessWidget {

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:wpflow/models/user.dart';
-import '../models/home_user.dart';
+import '../../../core/utils/user.dart';
+import '../data/home_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SessionCard extends StatefulWidget {

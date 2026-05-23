@@ -67,8 +67,8 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - lib/assets/img/logo/wpFlow.png
-    - lib/assets/img/logo/wpFlow_logo.png
+    - lib/assets/img/wpFlow.png
+    - lib/assets/img/wpFlow_logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

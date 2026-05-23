@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:wpflow/models/session_manager.dart';
-import '../components/user_menu.dart';
-import '../components/header.dart';
-import '../models/send_message.dart';
-import '../components/dropdown_session.dart';
-import '../components/simple_message_tab.dart';
-import '../components/simple_send_button.dart';
+import 'package:wpflow/features/wpp_session/controllers/session_manager.dart';
+import '../../../core/widgets/user_menu.dart';
+import '../../../core/widgets/header.dart';
+import '../data/send_message.dart';
+import '../../home/widgets/dropdown_session.dart';
+import '../widgets/simple_message_tab.dart';
+import '../widgets/simple_send_button.dart';
 
 class SimpleMessagePage extends StatefulWidget {
   const SimpleMessagePage({super.key});

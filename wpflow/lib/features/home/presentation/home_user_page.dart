@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../components/user_menu.dart';
-import '../components/header.dart';
-import '../components/session_card.dart';
+import '../../../core/widgets/user_menu.dart';
+import '../../../core/widgets/header.dart';
+import '../widgets/session_card.dart';
 
 class HomeUserPage extends StatefulWidget {
   const HomeUserPage({super.key});

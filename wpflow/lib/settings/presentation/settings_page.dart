@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../components/user_menu.dart';
-import '../components/header.dart';
+import '../../core/widgets/user_menu.dart';
+import '../../core/widgets/header.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

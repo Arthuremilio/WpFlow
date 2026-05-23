@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/app-routes.dart';
+import '../routes/app-routes.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -29,7 +29,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: SizedBox(
                     height: 60,
                     child: Image.asset(
-                      'lib/assets/img/logo/wpFlow.png',
+                      'lib/assets/img/wpFlow.png',
                       fit: BoxFit.contain,
                     ),
                   ),

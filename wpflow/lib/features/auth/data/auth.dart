@@ -26,22 +26,29 @@ class Auth with ChangeNotifier {
     return isAuth ? _uid : null;
   }
 
-  Future<void> _authenticate(String email, String password, String urlFragment,
-      Function(String) onUserIdReceived) async {
+  Future<void> _authenticate(
+    String email,
+    String password,
+    String urlFragment,
+    Function(String) onUserIdReceived,
+  ) async {
     final url =
         'https://identitytoolkit.googleapis.com/v1/accounts:$urlFragment?key=AIzaSyANco6VWp64RdbxRhJphT7mERCJVsc60l4';
     final response = await http
         .post(
-      Uri.parse(url),
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-        'returnSecureToken': true,
-      }),
-    )
-        .timeout(Duration(seconds: 10), onTimeout: () {
-      throw AuthException('A requisição demorou muito. Tente novamente.');
-    });
+          Uri.parse(url),
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'returnSecureToken': true,
+          }),
+        )
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw AuthException('A requisição demorou muito. Tente novamente.');
+          },
+        );
 
     final body = jsonDecode(response.body);
 
@@ -53,9 +60,7 @@ class Auth with ChangeNotifier {
       _uid = body['localId'];
 
       _expiryDate = DateTime.now().add(
-        Duration(
-          seconds: int.parse(body['expiresIn']),
-        ),
+        Duration(seconds: int.parse(body['expiresIn'])),
       );
       onUserIdReceived(_uid!);
 
@@ -64,14 +69,24 @@ class Auth with ChangeNotifier {
   }
 
   Future<void> signup(
-      String email, String password, Function(String) onUserIdReceived) async {
+    String email,
+    String password,
+    Function(String) onUserIdReceived,
+  ) async {
     return _authenticate(email, password, 'signUp', onUserIdReceived);
   }
 
   Future<void> login(
-      String email, String password, Function(String) onUserIdReceived) async {
+    String email,
+    String password,
+    Function(String) onUserIdReceived,
+  ) async {
     return _authenticate(
-        email, password, 'signInWithPassword', onUserIdReceived);
+      email,
+      password,
+      'signInWithPassword',
+      onUserIdReceived,
+    );
   }
 
   Future<void> resetPassword(String email) async {
@@ -79,10 +94,7 @@ class Auth with ChangeNotifier {
         'https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=AIzaSyANco6VWp64RdbxRhJphT7mERCJVsc60l4';
     final response = await http.post(
       Uri.parse(url),
-      body: jsonEncode({
-        'requestType': 'PASSWORD_RESET',
-        'email': email,
-      }),
+      body: jsonEncode({'requestType': 'PASSWORD_RESET', 'email': email}),
     );
 
     final body = jsonDecode(response.body);

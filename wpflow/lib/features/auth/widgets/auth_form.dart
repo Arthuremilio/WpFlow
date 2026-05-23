@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../exceptions/auth_exception.dart';
-import '../models/auth.dart';
-import '../models/user.dart';
-import '../utils/app-routes.dart';
+import '../data/auth.dart';
+import '../../../core/utils/user.dart';
+import '../../../core/routes/app-routes.dart';
 import 'package:provider/provider.dart';
 
 enum AuthMode { Signup, Login }

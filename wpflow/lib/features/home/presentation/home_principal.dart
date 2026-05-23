@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../components/custom_app_bar.dart';
-import '../utils/app-routes.dart';
+import '../../../core/widgets/custom_app_bar.dart';
+import '../../../core/routes/app-routes.dart';
 
 class HomePrincipal extends StatelessWidget {
   const HomePrincipal({super.key});
@@ -37,7 +37,7 @@ class HomePrincipal extends StatelessWidget {
                             SizedBox(
                               width: 200,
                               child: Image.asset(
-                                'lib/assets/img/logo/wpFlow.png',
+                                'lib/assets/img/wpFlow.png',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -85,7 +85,7 @@ class HomePrincipal extends StatelessWidget {
                                 SizedBox(
                                   width: 250,
                                   child: Image.asset(
-                                    'lib/assets/img/logo/wpFlow.png',
+                                    'lib/assets/img/wpFlow.png',
                                     fit: BoxFit.contain,
                                   ),
                                 ),
