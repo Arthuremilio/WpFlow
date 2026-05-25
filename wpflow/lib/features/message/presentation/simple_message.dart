@@ -5,7 +5,7 @@ import 'package:wpflow/features/wpp_session/controllers/session_manager.dart';
 import '../../../core/widgets/user_menu.dart';
 import '../../../core/widgets/header.dart';
 import '../data/send_message.dart';
-import '../../home/widgets/dropdown_session.dart';
+import '../widgets/dropdown_session.dart';
 import '../widgets/simple_message_tab.dart';
 import '../widgets/simple_send_button.dart';
 

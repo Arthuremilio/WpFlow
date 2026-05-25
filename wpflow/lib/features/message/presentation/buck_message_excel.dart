@@ -7,7 +7,7 @@ import 'package:wpflow/features/wpp_session/controllers/session_manager.dart';
 import 'package:wpflow/core/utils/user.dart';
 import '../../../core/widgets/user_menu.dart';
 import '../../../core/widgets/header.dart';
-import '../../home/widgets/dropdown_session.dart';
+import '../widgets/dropdown_session.dart';
 import '../data/send_buck_message_excel.dart';
 import '../widgets/excel_import_config.dart';
 import '../widgets/excel_preview_table.dart';
